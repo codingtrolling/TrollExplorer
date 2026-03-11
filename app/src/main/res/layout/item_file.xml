@@ -2,14 +2,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:background="@drawable/card_background"
+    android:padding="16dp"
     android:orientation="horizontal"
-    android:padding="12dp"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:elevation="2dp">
 
     <ImageView
         android:id="@+id/item_icon"
-        android:layout_width="40dp"
-        android:layout_height="40dp" />
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:tint="@color/accent_blue" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,14 +25,15 @@
             android:id="@+id/item_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@color/text_slate"
             android:textSize="16sp"
-            android:textColor="?android:attr/textColorPrimary" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/item_details"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="?android:attr/textColorSecondary" />
+            android:textColor="#94A3B8"
+            android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>
