@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
                 super.onBackPressed()
             }
         } else {
+            @Suppress("DEPRECATION")
             super.onBackPressed()
         }
     }
@@ -74,18 +75,17 @@ class MainActivity : AppCompatActivity() {
             val file = files[position]
             holder.nameText.text = file.name
             
+            // Using icons guaranteed to exist in the SDK
             val iconRes = if (file.isDirectory) {
-                android.R.drawable.ic_menu_archive
+                android.R.drawable.ic_menu_directions
             } else {
-                android.R.drawable.ic_menu_report_image
+                android.R.drawable.ic_menu_help
             }
             holder.icon.setImageResource(iconRes)
 
             holder.itemView.setOnClickListener { onClick(file) }
         }
 
-        override fun getItemCount(): Int {
-            return files.size
-        }
+        override fun getItemCount(): Int = files.size
     }
 }
