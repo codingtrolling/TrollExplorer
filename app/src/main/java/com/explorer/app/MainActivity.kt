@@ -28,30 +28,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateList(path: File) {
-        val fileArray = path.listFiles()
-        val files = fileArray?.toList() ?: emptyList()
-        
-        recyclerView.adapter = FileAdapter(files) { selectedFile ->
-            if (selectedFile.isDirectory) {
-                currentPath = selectedFile
-                updateList(currentPath)
-            } else {
-                Toast.makeText(this, "File: " + selectedFile.name, Toast.LENGTH_SHORT).show()
+        try {
+            val fileArray = path.listFiles()
+            val files = fileArray?.toList() ?: emptyList()
+            
+            if (fileArray == null) {
+                Toast.makeText(this, "Permission Denied or Path Invalid", Toast.LENGTH_LONG).show()
             }
+
+            recyclerView.adapter = FileAdapter(files) { selectedFile ->
+                if (selectedFile.isDirectory) {
+                    currentPath = selectedFile
+                    updateList(currentPath)
+                } else {
+                    Toast.makeText(this, "Opening: " + selectedFile.name, Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error: " + e.message, Toast.LENGTH_LONG).show()
         }
     }
 
     override fun onBackPressed() {
-        if (currentPath.path != "/storage/emulated/0") {
-            val parent = currentPath.parentFile
-            if (parent != null) {
-                currentPath = parent
-                updateList(currentPath)
-            } else {
-                super.onBackPressed()
-            }
+        if (currentPath.path != "/storage/emulated/0" && currentPath.parentFile != null) {
+            currentPath = currentPath.parentFile!!
+            updateList(currentPath)
         } else {
-            @Suppress("DEPRECATION")
             super.onBackPressed()
         }
     }
@@ -74,15 +76,7 @@ class MainActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val file = files[position]
             holder.nameText.text = file.name
-            
-            // Using icons guaranteed to exist in the SDK
-            val iconRes = if (file.isDirectory) {
-                android.R.drawable.ic_menu_directions
-            } else {
-                android.R.drawable.ic_menu_help
-            }
-            holder.icon.setImageResource(iconRes)
-
+            holder.icon.setImageResource(if (file.isDirectory) android.R.drawable.ic_menu_directions else android.R.drawable.ic_menu_help)
             holder.itemView.setOnClickListener { onClick(file) }
         }
 
