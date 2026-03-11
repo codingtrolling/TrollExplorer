@@ -1,7 +1,5 @@
-plugins {
-    id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-}
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 android {
     namespace 'com.explorer.app'
@@ -12,17 +10,13 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 1
-        versionName "1.0-Shizuku"
+        versionName "1.0"
     }
 
     buildTypes {
         release {
             minifyEnabled false
         }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -31,8 +25,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    
-    // Shizuku API for / browsing
     implementation "dev.rikka.shizuku:api:13.1.0"
     implementation "dev.rikka.shizuku:provider:13.1.0"
 }
