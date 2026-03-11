@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">TrollExplorer</string>
+    <string name="storage_usage">Storage: %1$d%% used</string>
+    <string name="new_folder">New Folder</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+</resources>
