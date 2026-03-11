@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace 'com.explorer.app'
+    namespace "com.explorer.app"
     compileSdk 34
 
     defaultConfig {
@@ -12,12 +12,13 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 1
-        versionName "1.0-Troll"
+        versionName "1.0"
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
