@@ -5,4 +5,6 @@
     <color name="border_slate">#1E293B</color>
     <color name="text_slate">#E2E8F0</color>
     <color name="accent_blue">#3B82F6</color>
+    
+    <color name="text_primary_dark">#E2E8F0</color>
 </resources>
