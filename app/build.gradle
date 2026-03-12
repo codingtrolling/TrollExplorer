@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.explorer.app'
+    namespace 'com.codingtrolling.trollexplorer'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.explorer.app"
+        applicationId "com.codingtrolling.trollexplorer"
         minSdk 26
         targetSdk 34
         versionCode 1
