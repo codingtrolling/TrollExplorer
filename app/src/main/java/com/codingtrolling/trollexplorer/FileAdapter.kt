@@ -45,7 +45,7 @@ class FileAdapter(private val onClick: (File) -> Unit) :
                     file.isDirectory -> R.drawable.ic_folder
                     nameLower.endsWith(".java") || nameLower.endsWith(".jar") -> R.drawable.ic_java
                     nameLower.endsWith(".py") -> R.drawable.ic_python
-                    nameLower.endsWith(".exe") || nameLower.endsWith(".bin") -> R.drawable.ic_exe
+                    nameLower.endsWith(".exe") || nameLower.endsWith(".msi") || nameLower.endsWith(".bat") || nameLower.endsWith(".cmd") || nameLower.endsWith(".bin") -> R.drawable.ic_exe
                     nameLower.endsWith(".iso") || nameLower.endsWith(".img") -> R.drawable.ic_disk_new
                     nameLower.endsWith(".mp3") || nameLower.endsWith(".wav") || nameLower.endsWith(".ogg") -> R.drawable.ic_troll_audio
                     nameLower.endsWith(".mp4") || nameLower.endsWith(".mkv") -> R.drawable.ic_video
