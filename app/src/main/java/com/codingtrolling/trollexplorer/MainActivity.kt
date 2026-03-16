@@ -21,6 +21,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 import java.io.File
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,13 +46,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = fileAdapter
 
         checkStoragePermissions()
         setupShizuku()
-
         loadFiles(currentPath)
     }
 
@@ -78,9 +78,7 @@ class MainActivity : AppCompatActivity() {
                     Shizuku.requestPermission(1001)
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (e: Exception) { e.printStackTrace() }
     }
 
     private fun loadFiles(directory: File) {
@@ -89,28 +87,49 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val files = withContext(Dispatchers.IO) {
-                directory.listFiles()?.filter { 
-                    if (!showHidden) !it.name.startsWith(".") else true 
-                }?.sortedWith(
-                    compareBy({ !it.isDirectory }, { it.name.lowercase() })
-                ) ?: emptyList()
+                val list = directory.listFiles()
+                if (list == null && Shizuku.pingBinder()) {
+                    // Standard API failed (Blank Root). Use Shizuku shell.
+                    listWithShizuku(directory.absolutePath)
+                } else {
+                    list?.toList() ?: emptyList()
+                }
             }
 
-            originalFileList = files
-            fileAdapter.submitList(files)
+            val filtered = files.filter { 
+                if (!showHidden) !it.name.startsWith(".") else true 
+            }.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
+
+            originalFileList = filtered
+            fileAdapter.submitList(filtered)
 
             supportActionBar?.title = if (directory.absolutePath == sdcard.absolutePath) "Internal Storage" else directory.name
             supportActionBar?.subtitle = directory.absolutePath
         }
     }
 
-    private fun navigateTo(file: File) {
-        if (file.isDirectory) {
-            currentPath = file
-            loadFiles(currentPath)
-        } else {
-            Toast.makeText(this, "Opening: ${file.name}", Toast.LENGTH_SHORT).show()
+    private fun listWithShizuku(path: String): List<File> {
+        val resultFiles = mutableListOf<File>()
+        try {
+            // Execute 'ls -a' as a shell command through Shizuku
+            val process = Shizuku.newProcess(arrayOf("ls", "-1", path), null, null)
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                if (!line.isNullOrBlank()) {
+                    resultFiles.add(File(path, line!!))
+                }
+            }
+            process.waitFor()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+        return resultFiles
+    }
+
+    private fun navigateTo(file: File) {
+        currentPath = file
+        loadFiles(currentPath)
     }
 
     private fun goBack() {
@@ -133,13 +152,10 @@ class MainActivity : AppCompatActivity() {
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = false
-            override fun onQueryTextChange(newText: String?): Boolean {
-                val filtered = if (newText.isNullOrBlank()) {
-                    originalFileList
-                } else {
-                    originalFileList.filter { it.name.contains(newText, ignoreCase = true) }
-                }
+            override fun onQueryTextSubmit(q: String?): Boolean = false
+            override fun onQueryTextChange(txt: String?): Boolean {
+                val filtered = if (txt.isNullOrBlank()) originalFileList 
+                               else originalFileList.filter { it.name.contains(txt, true) }
                 fileAdapter.submitList(filtered)
                 return true
             }
@@ -149,13 +165,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            android.R.id.home -> {
-                goBack()
-                true
-            }
-            R.id.action_settings -> {
+            android.R.id.home -> { goBack(); true }
+            R.id.action_settings -> { 
                 startActivity(Intent(this, SettingsActivity::class.java))
-                true
+                true 
             }
             else -> super.onOptionsItemSelected(item)
         }
