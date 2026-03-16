@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -24,9 +25,12 @@ class MainActivity : AppCompatActivity() {
     private var currentPath: File = File("/storage/emulated/0")
     private val fileAdapter = FileAdapter { navigateTo(it) }
 
+    // Shizuku permission result listener
     private val shizukuListener = Shizuku.OnRequestPermissionResultListener { _, grantResult ->
         if (grantResult == PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Shizuku Authorized!", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Shizuku Denied", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -35,9 +39,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Setup UI
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = fileAdapter
 
+        // Permissions & Services
         checkStoragePermissions()
         setupShizuku()
         
@@ -66,6 +73,8 @@ class MainActivity : AppCompatActivity() {
                 if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
                     Shizuku.requestPermission(1001)
                 }
+            } else {
+                Toast.makeText(this, "Shizuku not running", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -79,7 +88,16 @@ class MainActivity : AppCompatActivity() {
                     compareBy({ !it.isDirectory }, { it.name.lowercase() })
                 ) ?: emptyList()
             }
+            
+            if (files.isEmpty() && directory.exists()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Access Denied or Empty Folder", Toast.LENGTH_SHORT).show()
+                }
+            }
+            
             fileAdapter.submitList(files)
+            supportActionBar?.title = directory.name.ifEmpty { "Root" }
+            supportActionBar?.subtitle = directory.absolutePath
         }
     }
 
@@ -87,14 +105,36 @@ class MainActivity : AppCompatActivity() {
         if (file.isDirectory) {
             currentPath = file
             loadFiles(currentPath)
+        } else {
+            Toast.makeText(this, "File: ${file.name}", Toast.LENGTH_SHORT).show()
         }
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (currentPath.absolutePath != "/storage/emulated/0" && currentPath.absolutePath != "/") {
+    private fun goBack() {
+        val rootPath = "/storage/emulated/0"
+        if (currentPath.absolutePath != rootPath && currentPath.absolutePath != "/") {
             currentPath = currentPath.parentFile ?: File("/")
             loadFiles(currentPath)
+        } else {
+            finish()
+        }
+    }
+
+    // Handles the Action Bar (top) back button
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            goBack()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    // Handles the physical/gesture back button
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        val rootPath = "/storage/emulated/0"
+        if (currentPath.absolutePath != rootPath && currentPath.absolutePath != "/") {
+            goBack()
         } else {
             super.onBackPressed()
         }
