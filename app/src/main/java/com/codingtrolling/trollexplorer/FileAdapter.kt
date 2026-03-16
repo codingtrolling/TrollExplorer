@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.codingtrolling.trollexplorer.databinding.ItemFileBinding
 import java.io.File
-import android.util.Log
 
 class FileAdapter(private val onClick: (File) -> Unit) :
     ListAdapter<File, FileAdapter.FileViewHolder>(FileDiffCallback()) {
@@ -30,30 +29,31 @@ class FileAdapter(private val onClick: (File) -> Unit) :
             val nameLower = file.name.lowercase()
             
             when {
-                file.isDirectory -> {
-                    binding.fileIcon.setImageResource(R.drawable.ic_folder)
-                }
-                nameLower.endsWith(".png") || nameLower.endsWith(".jpg") || nameLower.endsWith(".jpeg") || nameLower.endsWith(".mp4") || nameLower.endsWith(".mkv") -> {
+                file.isDirectory -> binding.fileIcon.setImageResource(R.drawable.ic_folder)
+                nameLower.endsWith(".png") || nameLower.endsWith(".jpg") || nameLower.endsWith(".jpeg") || 
+                nameLower.endsWith(".mp4") || nameLower.endsWith(".mkv") -> {
                     Glide.with(binding.fileIcon.context)
                         .load(file)
                         .centerCrop()
                         .placeholder(R.drawable.ic_file_default)
                         .into(binding.fileIcon)
                 }
+                nameLower.endsWith(".mcaddon") || nameLower.endsWith(".mcpack") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_minecraft)
+                }
+                nameLower.endsWith(".rbxl") || nameLower.endsWith(".rbxm") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_roblox)
+                }
                 else -> {
                     val iconRes = when {
-                        nameLower.endsWith(".mp3") || nameLower.endsWith(".wav") || nameLower.endsWith(".ogg") -> R.drawable.ic_troll_audio
-                        nameLower.endsWith(".iso") || nameLower.endsWith(".img") -> R.drawable.ic_disk_new
+                        nameLower.endsWith(".mp3") || nameLower.endsWith(".wav") -> R.drawable.ic_troll_audio
                         nameLower.endsWith(".apk") -> R.drawable.ic_android
-                        nameLower.endsWith(".java") || nameLower.endsWith(".jar") -> R.drawable.ic_java
-                        nameLower.endsWith(".py") -> R.drawable.ic_python
-                        nameLower.endsWith(".exe") || nameLower.endsWith(".msi") || nameLower.endsWith(".bat") -> R.drawable.ic_exe
+                        nameLower.endsWith(".exe") || nameLower.endsWith(".msi") -> R.drawable.ic_exe
                         else -> R.drawable.ic_file_default
                     }
                     binding.fileIcon.setImageResource(iconRes)
                 }
             }
-            
             binding.root.setOnClickListener { onClick(file) }
         }
     }

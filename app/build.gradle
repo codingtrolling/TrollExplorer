@@ -4,6 +4,9 @@ plugins {
 }
 
 android {
+    aaptOptions {
+        cruncherEnabled = false
+    }
     namespace "com.codingtrolling.trollexplorer"
     namespace 'com.codingtrolling.trollexplorer'
     compileSdk 34
