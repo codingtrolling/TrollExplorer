@@ -1,5 +1,6 @@
 package com.codingtrolling.trollexplorer
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -83,8 +84,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadFiles(directory: File) {
-        val prefs = getSharedPreferences("troll_prefs", android.content.Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("troll_prefs", Context.MODE_PRIVATE)
         val showHidden = prefs.getBoolean("show_hidden", false)
+
         lifecycleScope.launch {
             val files = withContext(Dispatchers.IO) {
                 directory.listFiles()?.filter { 
@@ -93,12 +95,6 @@ class MainActivity : AppCompatActivity() {
                     compareBy({ !it.isDirectory }, { it.name.lowercase() })
                 ) ?: emptyList()
             }
-            originalFileList = files
-            fileAdapter.submitList(files)
-            supportActionBar?.title = if (directory.absolutePath == sdcard.absolutePath) "Internal Storage" else directory.name
-            supportActionBar?.subtitle = directory.absolutePath
-        }
-    }
 
             originalFileList = files
             fileAdapter.submitList(files)
@@ -125,6 +121,11 @@ class MainActivity : AppCompatActivity() {
         } else {
             finish()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadFiles(currentPath)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -167,11 +168,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        loadFiles(currentPath)
     }
 
     override fun onDestroy() {
