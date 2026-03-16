@@ -25,7 +25,8 @@ class FileAdapter(private val onClick: (File) -> Unit) :
             if (file.isDirectory) android.R.drawable.ic_menu_directions 
             else android.R.drawable.ic_menu_help
         )
-        holder.root.setOnClickListener { onClick(file) }
+        // Fixed: Use holder.b.root to explicitly target the View, not the File property
+        holder.b.root.setOnClickListener { onClick(file) }
     }
 
     class FileDiffCallback : DiffUtil.ItemCallback<File>() {
