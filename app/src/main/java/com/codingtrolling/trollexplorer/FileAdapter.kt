@@ -26,15 +26,15 @@ class FileAdapter(private val onClick: (File) -> Unit) :
                 when (ext) {
                     // JAVA / JAR = Coffee Icon (Using 'today' calendar icon as placeholder)
                     "java", "jar", "class" -> {
-                        b.itemIcon.setImageResource(android.R.drawable.ic_menu_today)
+                        b.itemIcon.setImageResource(R.drawable.ic_java)
                     }
                     // PYTHON = Snake Icon (Using 'send' paper plane as placeholder)
                     "py", "pyw", "pyc" -> {
-                        b.itemIcon.setImageResource(android.R.drawable.ic_menu_send)
+                        b.itemIcon.setImageResource(R.drawable.ic_python)
                     }
                     // ISO / IMG = CD Icon (Using 'save' floppy as placeholder)
                     "iso", "img", "bin" -> {
-                        b.itemIcon.setImageResource(android.R.drawable.ic_menu_save)
+                        b.itemIcon.setImageResource(R.drawable.ic_disk)
                     }
                     // APK = Android Logo
                     "apk" -> {
@@ -42,7 +42,7 @@ class FileAdapter(private val onClick: (File) -> Unit) :
                     }
                     // WINDOWS = EXE / BAT
                     "exe", "bat", "msi" -> {
-                        b.itemIcon.setImageResource(android.R.drawable.ic_menu_manage)
+                        b.itemIcon.setImageResource(R.drawable.ic_exe)
                     }
                     // LINUX = SH
                     "sh" -> {
