@@ -18,47 +18,61 @@ class FileAdapter(private val onClick: (File) -> Unit) :
             b.itemName.text = file.name
             val ext = file.extension.lowercase()
 
+            // --- ICON LOGIC ---
             if (file.isDirectory) {
                 // Folder Icon
                 b.itemIcon.setImageResource(android.R.drawable.ic_menu_directions)
             } else {
                 when (ext) {
+                    // JAVA / JAR = Coffee Icon (Using 'today' calendar icon as placeholder)
+                    "java", "jar", "class" -> {
+                        b.itemIcon.setImageResource(android.R.drawable.ic_menu_today)
+                    }
+                    // PYTHON = Snake Icon (Using 'send' paper plane as placeholder)
+                    "py", "pyw", "pyc" -> {
+                        b.itemIcon.setImageResource(android.R.drawable.ic_menu_send)
+                    }
+                    // ISO / IMG = CD Icon (Using 'save' floppy as placeholder)
+                    "iso", "img", "bin" -> {
+                        b.itemIcon.setImageResource(android.R.drawable.ic_menu_save)
+                    }
+                    // APK = Android Logo
                     "apk" -> {
-                        // Android Logo (Using system app icon as placeholder)
                         b.itemIcon.setImageResource(android.R.drawable.sym_def_app_icon)
                     }
-                    "exe", "bat" -> {
-                        // Windows Logos (Using management icon as placeholder)
+                    // WINDOWS = EXE / BAT
+                    "exe", "bat", "msi" -> {
                         b.itemIcon.setImageResource(android.R.drawable.ic_menu_manage)
                     }
+                    // LINUX = SH
                     "sh" -> {
-                        // Linux Logo (Using info icon as placeholder)
                         b.itemIcon.setImageResource(android.R.drawable.ic_menu_info_details)
                     }
+                    // PDF = Adobe
                     "pdf" -> {
-                        // PDF Logo (Using edit icon as placeholder)
                         b.itemIcon.setImageResource(android.R.drawable.ic_menu_edit)
                     }
+                    // IMAGES = Previews
                     "png", "jpg", "jpeg", "webp", "gif" -> {
-                        // Image Preview using Glide
                         Glide.with(b.itemIcon.context)
                             .load(file)
                             .placeholder(android.R.drawable.ic_menu_gallery)
                             .centerCrop()
                             .into(b.itemIcon)
                     }
+                    // DEFAULT
                     else -> {
-                        // Default File Icon
                         b.itemIcon.setImageResource(android.R.drawable.ic_menu_help)
                     }
                 }
             }
 
+            // --- ACTIONS ---
             b.root.setOnClickListener { onClick(file) }
             
-            // Long click for "Trolling" actions (Delete/Rename/Info)
             b.root.setOnLongClickListener {
-                Toast.makeText(b.root.context, "Selected: ${file.name}", Toast.LENGTH_SHORT).show()
+                val info = "Type: ${if(file.isDirectory) "Folder" else "File"}\nSize: ${file.length() / 1024} KB"
+                Toast.makeText(b.root.context, info, Toast.LENGTH_LONG).show()
                 true
             }
         }
