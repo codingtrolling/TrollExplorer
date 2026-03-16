@@ -17,7 +17,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMainBinding
     private var currentPath: File = File("/storage/emulated/0")
     private val fileAdapter = FileAdapter { navigateTo(it) }
@@ -26,21 +25,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = fileAdapter
-        }
-
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.adapter = fileAdapter
         loadFiles(currentPath)
     }
 
     private fun loadFiles(directory: File) {
         lifecycleScope.launch {
             val files = withContext(Dispatchers.IO) {
-                directory.listFiles()?.sortedWith(
-                    compareBy({ !it.isDirectory }, { it.name.lowercase() })
-                ) ?: emptyList()
+                directory.listFiles()?.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() })) ?: emptyList()
             }
             fileAdapter.submitList(files)
         }
@@ -53,23 +46,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    class FileAdapter(private val onClick: (File) -> Unit) : 
-        ListAdapter<File, FileAdapter.ViewHolder>(FileDiffCallback()) {
-
+    class FileAdapter(private val onClick: (File) -> Unit) : ListAdapter<File, FileAdapter.ViewHolder>(FileDiffCallback()) {
         inner class ViewHolder(val b: ItemFileBinding) : RecyclerView.ViewHolder(b.root)
-
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val b = ItemFileBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-            return ViewHolder(b)
+            return ViewHolder(ItemFileBinding.inflate(LayoutInflater.from(parent.context), parent, false))
         }
-
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val file = getItem(position)
             holder.b.itemName.text = file.name
-            holder.b.itemIcon.setImageResource(
-                if (file.isDirectory) android.R.drawable.ic_menu_directions 
-                else android.R.drawable.ic_menu_help
-            )
+            holder.b.itemIcon.setImageResource(if (file.isDirectory) android.R.drawable.ic_menu_directions else android.R.drawable.ic_menu_help)
             holder.root.setOnClickListener { onClick(file) }
         }
     }
