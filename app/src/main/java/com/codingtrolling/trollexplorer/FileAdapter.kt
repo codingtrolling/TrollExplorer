@@ -9,7 +9,7 @@ import com.bumptech.glide.Glide
 import com.codingtrolling.trollexplorer.databinding.ItemFileBinding
 import java.io.File
 
-class FileAdapter(private val onClick: (File) -> Unit) :
+class FileAdapter(private val onClick: (File) -> Unit, private val onLongClick: (File) -> Unit, private val onLongClick: (File) -> Unit) :
     ListAdapter<File, FileAdapter.FileViewHolder>(FileDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
@@ -44,6 +44,57 @@ class FileAdapter(private val onClick: (File) -> Unit) :
                 nameLower.endsWith(".rbxl") || nameLower.endsWith(".rbxm") -> {
                     binding.fileIcon.setImageResource(R.drawable.ic_roblox)
                 }
+                nameLower.endsWith(".zip") || nameLower.endsWith(".rar") || nameLower.endsWith(".7z") || nameLower.endsWith(".tar") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_archive)
+                }
+                nameLower.endsWith(".html") || nameLower.endsWith(".css") || nameLower.endsWith(".js") || nameLower.endsWith(".kt") || nameLower.endsWith(".java") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_code)
+                }
+                nameLower.endsWith(".pdf") || nameLower.endsWith(".doc") || nameLower.endsWith(".docx") || nameLower.endsWith(".txt") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_doc)
+                }
+                nameLower.endsWith(".json") || nameLower.endsWith(".xml") || nameLower.endsWith(".sql") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_data)
+                }
+                nameLower.endsWith(".mp3") || nameLower.endsWith(".wav") || nameLower.endsWith(".ogg") -> {
+                }
+                nameLower.endsWith(".sh") || nameLower.endsWith(".py") || nameLower.endsWith(".bat") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_script)
+                }
+                nameLower.endsWith(".ttf") || nameLower.endsWith(".otf") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_font)
+                }
+                nameLower.endsWith(".conf") || nameLower.endsWith(".prop") || nameLower.endsWith(".ini") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_config)
+                }
+                nameLower.endsWith(".log") -> {
+                }
+                nameLower.endsWith(".exe") || nameLower.endsWith(".msi") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_executable)
+                }
+                nameLower.endsWith(".iso") || nameLower.endsWith(".img") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_disk)
+                }
+                nameLower.endsWith(".pem") || nameLower.endsWith(".key") || nameLower.endsWith(".crt") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_key)
+                }
+                nameLower.endsWith(".mcworld") || nameLower.endsWith(".mctemplate") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_mc_world)
+                    binding.fileIcon.setImageResource(R.drawable.ic_log)
+                }
+                else -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_file_default)
+                }
+                    binding.fileIcon.setImageResource(R.drawable.ic_music)
+                }
+                nameLower.endsWith(".zip") || nameLower.endsWith(".rar") || nameLower.endsWith(".7z") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_archive)
+                }
+                nameLower.endsWith(".html") || nameLower.endsWith(".css") || nameLower.endsWith(".js") -> {
+                    binding.fileIcon.setImageResource(R.drawable.ic_code)
+                }
+                    binding.fileIcon.setImageResource(R.drawable.ic_roblox)
+                }
                 else -> {
                     val iconRes = when {
                         nameLower.endsWith(".mp3") || nameLower.endsWith(".wav") -> R.drawable.ic_troll_audio
@@ -55,6 +106,8 @@ class FileAdapter(private val onClick: (File) -> Unit) :
                 }
             }
             binding.root.setOnClickListener { onClick(file) }
+            binding.root.setOnLongClickListener { onLongClick(file); true }
+            binding.root.setOnLongClickListener { onLongClick(file); true }
         }
     }
 
