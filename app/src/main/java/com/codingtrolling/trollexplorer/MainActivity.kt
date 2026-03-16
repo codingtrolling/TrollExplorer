@@ -21,10 +21,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = fileAdapter
-        }
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.adapter = fileAdapter
 
         loadFiles(currentPath)
     }
@@ -47,12 +45,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (currentPath.absolutePath != "/storage/emulated/0") {
             currentPath = currentPath.parentFile ?: currentPath
             loadFiles(currentPath)
         } else {
-            @Suppress("DEPRECATION")
             super.onBackPressed()
         }
     }
