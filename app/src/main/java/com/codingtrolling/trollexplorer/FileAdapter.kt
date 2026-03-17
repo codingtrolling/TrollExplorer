@@ -29,10 +29,46 @@ class FileAdapter(
         holder.binding.fileName.text = file.name
         
         // Use a safe fallback for icons to prevent unresolved reference errors
-        val iconRes = when {
-            file.isDirectory -> R.drawable.ic_folder
-            else -> R.drawable.ic_file_default
+        when {
+            file.isDirectory -> {
+                holder.binding.ivFileIcon.setImageResource(R.drawable.ic_folder)
+                holder.binding.ivFileIcon.clearColorFilter()
+            }
+            /* Android & System */
+            ext == "apk" -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_android)
+            ext in listOf("dex", "so", "bin", "elf") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_exe)
+            ext == "firmware" -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_firmware)
+            
+            /* CodingTrolling Dev (Kotlin, Java, Python, Scripts) */
+            ext in listOf("kt", "kts") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_code)
+            ext == "java" -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_java)
+            ext == "py" -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_python)
+            ext in listOf("js", "ts", "php", "sh") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_script)
+            ext in listOf("asm", "s") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_assembly)
+            
+            /* Minecraft & Gaming */
+            ext in listOf("mcpack", "mcaddon") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_minecraft)
+            ext == "mcworld" -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_mc_world)
+            ext == "rbxl" -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_roblox)
+            
+            /* Data & Configs */
+            ext in listOf("json", "xml", "yml", "yaml") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_config)
+            ext in listOf("db", "sqlite") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_database)
+            ext == "log" -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_log)
+            
+            /* Media & Documents */
+            ext in listOf("zip", "rar", "7z") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_archive)
+            ext in listOf("jpg", "png", "webp") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_vector)
+            ext in listOf("mp4", "mkv") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_video)
+            ext in listOf("mp3", "wav", "ogg") -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_troll_audio)
+            ext == "pdf" -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_pdf)
+            ext == "md" -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_markdown)
+            
+            /* Default */
+            else -> holder.binding.ivFileIcon.setImageResource(R.drawable.ic_file_default)
         }
+        // Optional: Remove global tint if you want to see the original PNG colors
+        holder.binding.ivFileIcon.clearColorFilter()
         holder.binding.fileIcon.setImageResource(iconRes)
 
         holder.binding.root.setOnClickListener { onClick(file) }
