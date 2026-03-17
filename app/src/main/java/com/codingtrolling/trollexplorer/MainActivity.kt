@@ -3,9 +3,11 @@ package com.codingtrolling.trollexplorer
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.*
 import android.provider.Settings
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
@@ -19,6 +21,10 @@ import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * GIGA POMEGRANATE EDITION - CODINGTROLLING LIMITED
+ * Integrated: Shizuku, FileObserver, StorageStats, Custom Web-Theming
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -36,8 +42,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // BRANDING: Organization Identity
-        Toast.makeText(this, "CodingTrolling Limited - Personalization En Cours", Toast.LENGTH_LONG).show()
+        // Apply CodingTrolling Web Palette (#0b0f1a = Deep Navy, #161e2d = Card Background)
+        window.statusBarColor = Color.parseColor("#0b0f1a")
+        binding.root.setBackgroundColor(Color.parseColor("#0b0f1a"))
+        binding.headerBar.setBackgroundColor(Color.parseColor("#161e2d"))
+
+        Toast.makeText(this, "Personalization En Cours: GIGA POMEGRANATE", Toast.LENGTH_LONG).show()
 
         Shizuku.addBinderReceivedListener(binderListener)
         initializeUI()
@@ -54,6 +64,8 @@ class MainActivity : AppCompatActivity() {
         if (checkPermissions()) {
             loadFiles(currentPath)
             startObserving(currentPath)
+            updateStorageStats()
+            checkShizukuStatus()
         }
     }
 
@@ -65,18 +77,14 @@ class MainActivity : AppCompatActivity() {
     private fun initializeUI() {
         setupRecyclerView()
         
-        // Header Trolling: Show Device Info on Click
-        binding.headerBar.setOnClickListener {
-            val deviceInfo = "Model: ${Build.MODEL} | SDK: ${Build.VERSION.SDK_INT}"
-            Toast.makeText(this, deviceInfo, Toast.LENGTH_SHORT).show()
-        }
-
+        // Settings Button: Hidden File Toggle with Branded Toast
         binding.btnSettings.setOnClickListener {
             showHidden = !showHidden
-            Toast.makeText(this, "Hidden Files: ${if(showHidden) "ON" else "OFF"}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "TrollView: ${if(showHidden) "Secrets Revealed" else "Ghost Mode"}", Toast.LENGTH_SHORT).show()
             loadFiles(currentPath)
         }
 
+        // Search Engine: Real-time filtering by name and extension
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -84,6 +92,11 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         })
+
+        // Header Action: Return to Storage Root
+        binding.tvCurrentPath.setOnClickListener {
+            loadFiles(Environment.getExternalStorageDirectory())
+        }
     }
 
     private fun setupRecyclerView() {
@@ -92,7 +105,6 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.adapter = adapter
     }
 
-    // @REMEMBER: Added FileObserver to detect changes in real-time
     private fun startObserving(path: File) {
         stopObserving()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -103,7 +115,7 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             @Suppress("DEPRECATION")
-            fileObserver = object : FileObserver(path.absolutePath, ALL_EVENTS) {
+            fileObserver = object : FileObserver(path.absolutePath) {
                 override fun onEvent(event: Int, pathName: String?) {
                     runOnUiThread { loadFiles(currentPath) }
                 }
@@ -125,13 +137,17 @@ class MainActivity : AppCompatActivity() {
         
         adapter.updateData(sorted)
         currentPath = directory
+        
+        // Syncing with CodingTrolling Slate Text Color
         binding.tvCurrentPath.text = directory.absolutePath
-        updateStorageStats()
+        binding.tvCurrentPath.setTextColor(Color.parseColor("#e2e8f0"))
     }
 
     private fun filterFiles(query: String?) {
         val files = currentPath.listFiles()?.toList() ?: emptyList()
-        val filtered = if (query.isNullOrBlank()) files else files.filter { it.name.contains(query, ignoreCase = true) }
+        val filtered = if (query.isNullOrBlank()) files else files.filter { 
+            it.name.contains(query, ignoreCase = true) || it.extension.contains(query, ignoreCase = true) 
+        }
         adapter.updateData(filtered.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() })))
     }
 
@@ -140,27 +156,24 @@ class MainActivity : AppCompatActivity() {
             loadFiles(file)
             startObserving(file)
         } else {
-            Toast.makeText(this, "Opening: ${file.name}", Toast.LENGTH_SHORT).show()
+            val sdf = SimpleDateFormat("HH:mm | dd/MM/yy", Locale.getDefault())
+            Toast.makeText(this, "Size: ${file.length() / 1024}KB | ${sdf.format(Date(file.lastModified()))}", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun onFileLongClick(file: File) {
         if (Shizuku.pingBinder()) {
-            Toast.makeText(this, "Shizuku Ready for ${file.name}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Shizuku Exec Ready: ${file.name}", Toast.LENGTH_LONG).show()
+        } else {
+            Toast.makeText(this, "Shizuku Inactive - Cannot TROLL", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun updateStorageStats() {
-        try {
-            val stat = StatFs(Environment.getExternalStorageDirectory().path)
-            val available = stat.blockSizeLong * stat.availableBlocksLong
-            val total = stat.blockSizeLong * stat.blockCountLong
-            val df = DecimalFormat("#.##")
-            val freeGB = df.format(available.toDouble() / (1024 * 1024 * 1024))
-            supportActionBar?.subtitle = "Free: ${freeGB} GB"
-        } catch (e: Exception) {
-            Log.e("TrollExplorer", "Storage stats failed", e)
-        }
+        val stat = StatFs(Environment.getExternalStorageDirectory().path)
+        val available = (stat.blockSizeLong * stat.availableBlocksLong).toDouble() / (1024 * 1024 * 1024)
+        val df = DecimalFormat("#.##")
+        supportActionBar?.subtitle = "Storage Available: ${df.format(available)} GB"
     }
 
     private fun checkShizukuStatus() {
@@ -169,19 +182,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkPermissions(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        }
-    }
+    private fun checkPermissions(): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) 
+        Environment.isExternalStorageManager() else 
+        ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
     private fun requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
         } else {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 101)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), 101)
         }
     }
 
@@ -191,9 +200,7 @@ class MainActivity : AppCompatActivity() {
             val parent = currentPath.parentFile ?: Environment.getExternalStorageDirectory()
             loadFiles(parent)
             startObserving(parent)
-        } else {
-            super.onBackPressed()
-        }
+        } else super.onBackPressed()
     }
 
     override fun onDestroy() {

@@ -1,11 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.AppCompat.DayNight.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">@color/background_dark</item>
-        <item name="android:colorBackground">@color/background_dark</item>
-        <item name="colorPrimary">@color/card_dark</item>
-        <item name="colorPrimaryDark">@color/background_dark</item>
-        <item name="colorAccent">@color/accent_blue</item>
-        <item name="android:textColorPrimary">@color/text_slate</item>
+    <style name="Theme.TrollExplorer" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">#0b0f1a</item>
+        <item name="colorPrimaryDark">#0b0f1a</item>
+        <item name="colorAccent">#3b82f6</item>
+        <item name="android:windowBackground">#0b0f1a</item>
+        <item name="android:textColorPrimary">#e2e8f0</item>
     </style>
 </resources>
