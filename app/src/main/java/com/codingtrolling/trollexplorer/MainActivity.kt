@@ -3,10 +3,9 @@ package com.codingtrolling.trollexplorer
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
+import android.os.*
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
@@ -16,15 +15,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.codingtrolling.trollexplorer.databinding.ActivityMainBinding
 import rikka.shizuku.Shizuku
 import java.io.File
+import java.text.DecimalFormat
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: FileAdapter
     private var currentPath: File = Environment.getExternalStorageDirectory()
+    private var showHidden: Boolean = false
+    private var fileObserver: FileObserver? = null
 
     private val binderListener = Shizuku.OnBinderReceivedListener {
-        checkShizukuPermission()
+        checkShizukuStatus()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,30 +36,45 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        Shizuku.addBinderReceivedListener(binderListener)
+        // BRANDING: Organization Identity
+        Toast.makeText(this, "CodingTrolling Limited - Personalization En Cours", Toast.LENGTH_LONG).show()
 
+        Shizuku.addBinderReceivedListener(binderListener)
+        initializeUI()
+        
         if (checkPermissions()) {
-            setupUI()
+            loadFiles(currentPath)
         } else {
             requestPermissions()
         }
     }
 
-    private fun checkShizukuPermission() {
-        if (Shizuku.pingBinder()) {
-            if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-                Shizuku.requestPermission(1001)
-            }
+    override fun onResume() {
+        super.onResume()
+        if (checkPermissions()) {
+            loadFiles(currentPath)
+            startObserving(currentPath)
         }
     }
 
-    private fun setupUI() {
-        setupRecyclerView()
-        loadFiles(currentPath)
+    override fun onPause() {
+        super.onPause()
+        stopObserving()
+    }
 
-        // Verifying IDs from activity_main.xml
+    private fun initializeUI() {
+        setupRecyclerView()
+        
+        // Header Trolling: Show Device Info on Click
+        binding.headerBar.setOnClickListener {
+            val deviceInfo = "Model: ${Build.MODEL} | SDK: ${Build.VERSION.SDK_INT}"
+            Toast.makeText(this, deviceInfo, Toast.LENGTH_SHORT).show()
+        }
+
         binding.btnSettings.setOnClickListener {
-            Toast.makeText(this, "TrollSettings...", Toast.LENGTH_SHORT).show()
+            showHidden = !showHidden
+            Toast.makeText(this, "Hidden Files: ${if(showHidden) "ON" else "OFF"}", Toast.LENGTH_SHORT).show()
+            loadFiles(currentPath)
         }
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -68,76 +87,110 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = FileAdapter(
-            emptyList(),
-            { file -> onFileClick(file) },
-            { file -> onFileLongClick(file) }
-        )
+        adapter = FileAdapter(emptyList(), { onFileClick(it) }, { onFileLongClick(it) })
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
     }
 
+    // @REMEMBER: Added FileObserver to detect changes in real-time
+    private fun startObserving(path: File) {
+        stopObserving()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            fileObserver = object : FileObserver(path, CREATE or DELETE or MODIFY or MOVED_FROM or MOVED_TO) {
+                override fun onEvent(event: Int, pathName: String?) {
+                    runOnUiThread { loadFiles(currentPath) }
+                }
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            fileObserver = object : FileObserver(path.absolutePath, ALL_EVENTS) {
+                override fun onEvent(event: Int, pathName: String?) {
+                    runOnUiThread { loadFiles(currentPath) }
+                }
+            }
+        }
+        fileObserver?.startWatching()
+    }
+
+    private fun stopObserving() {
+        fileObserver?.stopWatching()
+        fileObserver = null
+    }
+
     private fun loadFiles(directory: File) {
-        val files = directory.listFiles()?.sortedWith(
-            compareBy({ !it.isDirectory }, { it.name.lowercase() })
-        ) ?: emptyList()
+        val filesList = directory.listFiles() ?: emptyArray()
         
-        adapter.updateData(files)
+        val filtered = if (showHidden) filesList.toList() else filesList.filter { !it.name.startsWith(".") }
+        val sorted = filtered.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
+        
+        adapter.updateData(sorted)
         currentPath = directory
         binding.tvCurrentPath.text = directory.absolutePath
+        updateStorageStats()
     }
 
     private fun filterFiles(query: String?) {
-        val allFiles = currentPath.listFiles()?.toList() ?: emptyList()
-        val filtered = if (query.isNullOrBlank()) {
-            allFiles
-        } else {
-            allFiles.filter { it.name.contains(query, ignoreCase = true) }
-        }
+        val files = currentPath.listFiles()?.toList() ?: emptyList()
+        val filtered = if (query.isNullOrBlank()) files else files.filter { it.name.contains(query, ignoreCase = true) }
         adapter.updateData(filtered.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() })))
     }
 
     private fun onFileClick(file: File) {
         if (file.isDirectory) {
             loadFiles(file)
+            startObserving(file)
         } else {
-            Toast.makeText(this, "Trolling: ${file.name}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Opening: ${file.name}", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun onFileLongClick(file: File) {
-        // Shizuku-powered actions
+        if (Shizuku.pingBinder()) {
+            Toast.makeText(this, "Shizuku Ready for ${file.name}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun updateStorageStats() {
+        try {
+            val stat = StatFs(Environment.getExternalStorageDirectory().path)
+            val available = stat.blockSizeLong * stat.availableBlocksLong
+            val total = stat.blockSizeLong * stat.blockCountLong
+            val df = DecimalFormat("#.##")
+            val freeGB = df.format(available.toDouble() / (1024 * 1024 * 1024))
+            supportActionBar?.subtitle = "Free: ${freeGB} GB"
+        } catch (e: Exception) {
+            Log.e("TrollExplorer", "Storage stats failed", e)
+        }
+    }
+
+    private fun checkShizukuStatus() {
+        if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+            Shizuku.requestPermission(1001)
+        }
     }
 
     private fun checkPermissions(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
         } else {
-            val read = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-            read == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
     }
 
     private fun requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            try {
-                startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
-            } catch (e: Exception) {
-                startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION))
-            }
+            startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
         } else {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                101
-            )
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 101)
         }
     }
 
     override fun onBackPressed() {
         val root = Environment.getExternalStorageDirectory().absolutePath
         if (currentPath.absolutePath != root) {
-            loadFiles(currentPath.parentFile ?: Environment.getExternalStorageDirectory())
+            val parent = currentPath.parentFile ?: Environment.getExternalStorageDirectory()
+            loadFiles(parent)
+            startObserving(parent)
         } else {
             super.onBackPressed()
         }
@@ -145,6 +198,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         Shizuku.removeBinderReceivedListener(binderListener)
+        stopObserving()
         super.onDestroy()
     }
 }
