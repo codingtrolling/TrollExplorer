@@ -1,9 +1,7 @@
 package com.codingtrolling.trollexplorer
 
 import android.Manifest
-import android.content.ComponentName
 import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.*
@@ -25,11 +23,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: FileAdapter
     private var currentPath: File = Environment.getExternalStorageDirectory()
     
-    // REQUEST CODE for Shizuku Permission
+    // Shizuku Request Code
     private val SHIZUKU_CODE = 1002
 
+    // Listener for Shizuku binder connection
     private val binderListener = Shizuku.OnBinderReceivedListener {
-        checkShizukuPermission()
+        checkShizukuStatus()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,26 +36,29 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Branding & Colors (CodingTrolling #0b0f1a)
+        // BRANDING: Using CodingTrolling Navy (#0b0f1a) and Blue (#3b82f6)
         window.statusBarColor = Color.parseColor("#0b0f1a")
         binding.root.setBackgroundColor(Color.parseColor("#0b0f1a"))
         binding.headerBar.setBackgroundColor(Color.parseColor("#161e2d"))
+        binding.tvBrand.setTextColor(Color.parseColor("#3b82f6")) // Pure Blue branding
 
         setupRecyclerView()
         setupListeners()
         
-        // Initialize Shizuku
+        // Register Shizuku Listener
         Shizuku.addBinderReceivedListener(binderListener)
         
         if (checkPermissions()) loadFiles(currentPath) else requestPermissions()
     }
 
-    private fun checkShizukuPermission() {
-        if (Shizuku.isPreV11()) return
-        if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-            binding.tvBrand.setTextColor(Color.parseColor("#22c55e")) // Giga-Green Active
-        } else {
-            Shizuku.requestPermission(SHIZUKU_CODE)
+    private fun checkShizukuStatus() {
+        if (Shizuku.pingBinder()) {
+            if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+                Shizuku.requestPermission(SHIZUKU_CODE)
+            } else {
+                // Subtle Blue highlight when active, no neon green
+                binding.tvBrand.shadowLayer = 10f
+            }
         }
     }
 
@@ -72,6 +74,10 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         })
+
+        binding.tvBrand.setOnClickListener {
+            loadFiles(Environment.getExternalStorageDirectory())
+        }
     }
 
     private fun setupRecyclerView() {
@@ -82,13 +88,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun onFileLongClick(file: File) {
         if (Shizuku.pingBinder()) {
-            // This is where the Titan logic happens. 
-            // We can now run 'rm -rf' or 'cp' using Shizuku shell.
-            val cmd = "ls -l ${file.absolutePath}"
-            Toast.makeText(this, "Shizuku Exec: ${file.name}", Toast.LENGTH_SHORT).show()
-            // executeShellCommand(cmd) <- This would be your next step
+            Toast.makeText(this, "Shizuku Ready: ${file.name}", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(this, "Shizuku Service Not Found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Shizuku Disconnected", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -97,13 +99,16 @@ class MainActivity : AppCompatActivity() {
         adapter.updateData(files.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() })))
         currentPath = directory
         binding.tvCurrentPath.text = directory.absolutePath
+        binding.tvCurrentPath.setTextColor(Color.parseColor("#e2e8f0")) // Slate text
         updateStorageStats()
     }
 
     private fun updateStorageStats() {
         val stat = StatFs(Environment.getExternalStorageDirectory().path)
         val free = (stat.blockSizeLong * stat.availableBlocksLong).toDouble() / (1024 * 1024 * 1024)
-        supportActionBar?.subtitle = "Free: ${DecimalFormat("#.##").format(free)} GB"
+        // Set storage info in the Titan header
+        binding.tvStorageInfo.text = "Free: ${DecimalFormat("#.##").format(free)} GB"
+        binding.tvStorageInfo.setTextColor(Color.parseColor("#94a3b8"))
     }
 
     private fun checkPermissions(): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) 

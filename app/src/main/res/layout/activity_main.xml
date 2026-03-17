@@ -22,6 +22,7 @@
 
             <TextView
                 android:id="@+id/tvBrand"
+        <TextView android:id="@+id/tvStorageInfo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_below="@id/tvBrand" android:text="Free: 0.00 GB" android:textColor="#94a3b8" android:textSize="12sp" />
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="CodingTrolling"
