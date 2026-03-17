@@ -23,7 +23,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: FileAdapter
     private var currentPath: File = Environment.getExternalStorageDirectory()
 
-    // Shizuku listener to handle permission state changes
     private val binderListener = Shizuku.OnBinderReceivedListener {
         checkShizukuPermission()
     }
@@ -33,7 +32,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize Shizuku
         Shizuku.addBinderReceivedListener(binderListener)
 
         if (checkPermissions()) {
@@ -46,11 +44,8 @@ class MainActivity : AppCompatActivity() {
     private fun checkShizukuPermission() {
         if (Shizuku.pingBinder()) {
             if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-                // Request Shizuku permission (1001 is our request code)
                 Shizuku.requestPermission(1001)
             }
-        } else {
-            Toast.makeText(this, "Shizuku Service not found!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -58,14 +53,12 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         loadFiles(currentPath)
 
-        // Restore Settings Button
-        binding.btnSettings?.setOnClickListener {
-            // Placeholder for your Settings Activity
-            Toast.makeText(this, "TrollSettings Loading...", Toast.LENGTH_SHORT).show()
+        // Verifying IDs from activity_main.xml
+        binding.btnSettings.setOnClickListener {
+            Toast.makeText(this, "TrollSettings...", Toast.LENGTH_SHORT).show()
         }
 
-        // Restore Search Logic
-        binding.searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
                 filterFiles(newText)
@@ -75,7 +68,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        // Matching the 3-param constructor: files, onClick, onLongClick
         adapter = FileAdapter(
             emptyList(),
             { file -> onFileClick(file) },
@@ -92,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         
         adapter.updateData(files)
         currentPath = directory
-        binding.tvCurrentPath?.text = directory.absolutePath
+        binding.tvCurrentPath.text = directory.absolutePath
     }
 
     private fun filterFiles(query: String?) {
@@ -114,8 +106,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onFileLongClick(file: File) {
-        // Future: Context menu for Shizuku-powered deletions/moves
-        Toast.makeText(this, "File Options: ${file.name}", Toast.LENGTH_SHORT).show()
+        // Shizuku-powered actions
     }
 
     private fun checkPermissions(): Boolean {
@@ -132,8 +123,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
             } catch (e: Exception) {
-                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                startActivity(intent)
+                startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION))
             }
         } else {
             ActivityCompat.requestPermissions(
